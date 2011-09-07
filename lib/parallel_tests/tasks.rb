@@ -22,6 +22,7 @@ namespace :parallel do
       # dump then load in parallel
       Rake::Task['db:schema:dump'].invoke
       Rake::Task['parallel:load_schema'].invoke(args[:count])
+      Rake::Task['parallel:load_bootstrap'].invoke(args[:count])
     else
       # there is no separate dump / load for schema_format :sql -> do it safe and slow
       args = args.to_hash.merge(:non_parallel => true) # normal merge returns nil
@@ -40,6 +41,13 @@ namespace :parallel do
   task :load_schema, :count do |t,args|
     run_in_parallel('rake db:test:load', args)
   end
+# load the bootstrap data in parallel
+  desc "load bootstrap data in parallel"
+  task :load_bootstrap, :count do |t,args|
+    run_in_parallel('RAILS_ENV=test rake db:data:bootstrap', args)
+  end
+
+  #end
 
   ['test', 'spec', 'features'].each do |type|
     desc "run #{type} in parallel with parallel:#{type}[num_cpus]"
